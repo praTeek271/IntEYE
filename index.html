@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>You Know It's Wrong</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background: #111;
+            color: #fff;
+            font-family: Arial, sans-serif;
+        }
+
+        h1 {
+            margin-bottom: 40px;
+            font-size: 2.2rem;
+            text-align: center;
+        }
+
+        video,
+        audio {
+            display: block;
+            margin: 0 auto;
+            outline: none;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>You Know It's Wrong , please Stop</h1>
+    <div id="media-container"></div>
+    <script>
+        // Replace these URLs with your actual video and mp3 links
+        const VIDEO_URL = "https://www.w3schools.com/html/mov_bbb.mp4";
+        const AUDIO_URL = "https://www.w3schools.com/html/horse.mp3";
+
+        function tryClose() {
+            window.open('', '_self', '');
+            window.close();
+        }
+
+        function playAudioFallback() {
+            const container = document.getElementById('media-container');
+            container.innerHTML = '';
+            const audio = document.createElement('audio');
+            audio.src = AUDIO_URL;
+            audio.autoplay = true;
+            audio.controls = false;
+            audio.style.display = 'none';
+            audio.addEventListener('ended', tryClose);
+            container.appendChild(audio);
+            // Try to play in case autoplay is blocked
+            audio.play().catch(() => { });
+        }
+
+        function playVideo() {
+            const container = document.getElementById('media-container');
+            container.innerHTML = '';
+            const video = document.createElement('video');
+            video.src = VIDEO_URL;
+            video.autoplay = true;
+            video.controls = false;
+            video.muted = false;
+            video.playsInline = true;
+            video.style.maxWidth = '90vw';
+            video.style.maxHeight = '60vh';
+            video.setAttribute('disablePictureInPicture', '');
+            video.setAttribute('tabindex', '-1');
+            video.setAttribute('playsinline', '');
+            // Prevent right-click/context menu
+            video.addEventListener('contextmenu', e => e.preventDefault());
+            // Prevent pausing
+            video.addEventListener('pause', () => video.play());
+            // On error, fallback to audio
+            video.addEventListener('error', playAudioFallback);
+            // On end, try to close
+            video.addEventListener('ended', tryClose);
+            container.appendChild(video);
+            // Try to play in case autoplay is blocked
+            video.play().catch(() => { });
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            setTimeout(playVideo, 1500);
+        });
+    </script>
+</body>
+
+</html>
