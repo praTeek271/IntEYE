@@ -69,11 +69,18 @@
             video.controls = false;
             video.muted = false;
             video.playsInline = true;
+            video.preload = 'none'; // Lazy load: don't preload until play
+            video.setAttribute('loading', 'lazy'); // For browsers that support it
             video.style.maxWidth = '90vw';
             video.style.maxHeight = '60vh';
             video.setAttribute('disablePictureInPicture', '');
             video.setAttribute('tabindex', '-1');
             video.setAttribute('playsinline', '');
+            // For static hosting (GitHub Pages), set type for best compatibility
+            const source = document.createElement('source');
+            source.src = VIDEO_URL;
+            source.type = 'video/mp4';
+            video.appendChild(source);
             // Prevent right-click/context menu
             video.addEventListener('contextmenu', e => e.preventDefault());
             // Prevent pausing
@@ -83,8 +90,11 @@
             // On end, try to close
             video.addEventListener('ended', tryClose);
             container.appendChild(video);
-            // Try to play in case autoplay is blocked
-            video.play().catch(() => { });
+            // Lazy load: only call play after a short delay to trigger loading
+            setTimeout(() => {
+                video.load(); // Start loading only now
+                video.play().catch(() => { });
+            }, 100);
         }
 
         window.addEventListener('DOMContentLoaded', () => {
