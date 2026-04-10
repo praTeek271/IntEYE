@@ -36,10 +36,11 @@
 <body>
     <h1>You Know It's Wrong , please Stop</h1>
     <div id="media-container"></div>
+
     <script>
-        // Replace these URLs with your actual video and mp3 links
         const VIDEO_URL = "./VID_20260410_081131_014.mp4";
         const AUDIO_URL = "./VID_20260410_081131_014.mp3";
+        const PLAYBACK_RATE = 0.75;
 
         function tryClose() {
             window.open('', '_self', '');
@@ -51,12 +52,17 @@
             container.innerHTML = '';
             const audio = document.createElement('audio');
             audio.src = AUDIO_URL;
-            audio.autoplay = true;
             audio.controls = false;
             audio.style.display = 'none';
+            audio.addEventListener('canplay', () => {
+                audio.playbackRate = PLAYBACK_RATE;
+            });
+            audio.addEventListener('ratechange', () => {
+                if (audio.playbackRate !== PLAYBACK_RATE) audio.playbackRate = PLAYBACK_RATE;
+            });
             audio.addEventListener('ended', tryClose);
             container.appendChild(audio);
-            // Try to play in case autoplay is blocked
+            audio.load();
             audio.play().catch(() => { });
         }
 
@@ -64,37 +70,39 @@
             const container = document.getElementById('media-container');
             container.innerHTML = '';
             const video = document.createElement('video');
-            video.src = VIDEO_URL;
-            video.autoplay = true;
             video.controls = false;
             video.muted = false;
             video.playsInline = true;
-            video.preload = 'none'; // Lazy load: don't preload until play
-            video.setAttribute('loading', 'lazy'); // For browsers that support it
+            video.preload = 'none';
             video.style.maxWidth = '90vw';
             video.style.maxHeight = '60vh';
             video.setAttribute('disablePictureInPicture', '');
             video.setAttribute('tabindex', '-1');
             video.setAttribute('playsinline', '');
-            // For static hosting (GitHub Pages), set type for best compatibility
-            const source = document.createElement('source');
-            source.src = VIDEO_URL;
-            source.type = 'video/mp4';
-            video.appendChild(source);
+
+            // Enforce fixed playback rate
+            video.addEventListener('canplay', () => {
+                video.playbackRate = PLAYBACK_RATE;
+            });
+            video.addEventListener('ratechange', () => {
+                if (video.playbackRate !== PLAYBACK_RATE) video.playbackRate = PLAYBACK_RATE;
+            });
             // Prevent right-click/context menu
             video.addEventListener('contextmenu', e => e.preventDefault());
-            // Prevent pausing
-            video.addEventListener('pause', () => video.play());
-            // On error, fallback to audio
+            // Prevent pausing — immediately resume if paused
+            video.addEventListener('pause', () => {
+                video.play().catch(() => { });
+            });
+            // On load error, fallback to audio
             video.addEventListener('error', playAudioFallback);
             // On end, try to close
             video.addEventListener('ended', tryClose);
+
             container.appendChild(video);
-            // Lazy load: only call play after a short delay to trigger loading
-            setTimeout(() => {
-                video.load(); // Start loading only now
-                video.play().catch(() => { });
-            }, 100);
+            // Lazy load: assign src now, then trigger load + play
+            video.src = VIDEO_URL;
+            video.load();
+            video.play().catch(() => { });
         }
 
         window.addEventListener('DOMContentLoaded', () => {
